@@ -1,0 +1,16 @@
+Pentru pornirea serverului am creat si am dat bind la cate un socket pentru udp si tcp pe care i-am bagat intr-un pollfd.
+De asemenea, am adaugat si file descriptor-ul pentru stdin, astfel serverul sa stie cand a fost introdusa o comanda pentru server (exit).
+Am creat o structura pentru a tine minte toti utilizatorii care s-au conectat o data. In aceasta memorez id-urile, fd (care este -1 daca user-ul este offline) si lista de subscriptii.
+Poll-ul de fd-uri este alocat dinamic si atunci cand isi atinge capacitatea este dublat.
+Atunci cand un client se conecteaza se primeste un pachet cu id-ul si se verifica daca exista deja si se trece statusul online (fd != -1), sau se creaza unul nou.
+Subscriber-ul foloseste select() pentru a verifica daca are input de la tastatura sau un mesaj nou.
+In cazul unei comenzi, se creaza un pachet tcp si este trimis catre server. In caz contrar, se afiseaza la ecran mesajul primit.
+Cand serverul primeste o comanda de la client, mai intai il cauta in baza de date si apoi verifica si actualizeaza lista de subscriptii conform comenzii.
+Pentru un pachet de tip udp, serverul cauta toate fd-urile subscriberiilor si le adauga intr-o coada apoi trimite pachetul catre toti dupa ce a fost prelucrat.
+
+Pentru reprezentarea mesajelor peste TCP am folosit o structura de date care incadreaza mesajul in patru tipuri:
+0 - Id subscriber, pentru a trimite catre server id-ul clientului la conectarea acestuia
+1 - Subscribe, acesta reprezinta o comanda de subscribe si contine topic-ul respectiv
+2 - Unsubscribe, acesta reprezinta o comanda de unsubscribe si contine topic-ul respectiv
+3 - Message, acesta este mesajul primit de server de la un client udp, formatat si apoi trimis catre clientul/clientii potriviti
+
